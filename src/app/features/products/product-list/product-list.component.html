@@ -1,0 +1,120 @@
+<div class="product-list-container">
+  <header class="list-header">
+    <h1>Gestión de Productos</h1>
+    <div class="header-actions">
+      <button class="btn-primary" routerLink="/products/new">
+        <span class="icon">+</span> Nuevo Producto
+      </button>
+      <button class="btn-secondary" (click)="refreshData()">
+        <span class="icon">↻</span> Actualizar
+      </button>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">Total Productos:</span>
+      <span class="stat-value">{{ totalProducts() }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Valor Inventario:</span>
+      <span class="stat-value">${{ totalValue() | number:'1.2-2' }}</span>
+    </div>
+    <div class="stat-item warning" *ngIf="lowStockCount() > 0">
+      <span class="stat-label">Stock Bajo:</span>
+      <span class="stat-value">{{ lowStockCount() }}</span>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <label class="filter-label">Filtrar por categoría:</label>
+    <div class="category-filters">
+      <button 
+        class="filter-chip" 
+        [class.active]="selectedCategory() === ''"
+        (click)="clearCategory()">
+        Todos
+      </button>
+      <button 
+        *ngFor="let cat of categories()" 
+        class="filter-chip"
+        [class.active]="selectedCategory() === cat"
+        (click)="setCategory(cat)">
+        {{ cat }}
+      </button>
+    </div>
+  </div>
+
+  <div class="error-banner" *ngIf="errorMessage()">
+    <span class="error-icon">⚠</span>
+    <span>{{ errorMessage() }}</span>
+    <button class="close-btn" (click)="errorMessage.set('')">×</button>
+  </div>
+
+  <div class="loading-overlay" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <span>Cargando productos...</span>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading()">
+    <table class="products-table" *ngIf="filteredProducts().length > 0; else noProducts">
+      <thead>
+        <tr>
+          <th class="sortable" (click)="toggleSort('name')">
+            Nombre {{ getSortIcon('name') }}
+          </th>
+          <th class="sortable" (click)="toggleSort('price')">
+            Precio {{ getSortIcon('price') }}
+          </th>
+          <th class="sortable" (click)="toggleSort('stock')">
+            Stock {{ getSortIcon('stock') }}
+          </th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th class="actions-column">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of filteredProducts()" 
+            [class.low-stock]="product.stock < 10">
+          <td class="product-name">{{ product.name }}</td>
+          <td class="product-price">${{ product.price | number:'1.2-2' }}</td>
+          <td class="product-stock">
+            <span class="stock-badge" [class.low]="product.stock < 10">
+              {{ product.stock }}
+            </span>
+          </td>
+          <td class="product-category">
+            <span class="category-tag">{{ product.category }}</span>
+          </td>
+          <td class="product-description">{{ product.description }}</td>
+          <td class="action-buttons">
+            <button class="btn-icon edit" 
+                    [routerLink]="['/products/edit', product.id]" 
+                    title="Editar">
+              ✎
+            </button>
+            <button class="btn-icon delete" 
+                    (click)="deleteProduct(product.id)" 
+                    title="Eliminar"
+                    [disabled]="isLoading()">
+              🗑
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #noProducts>
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No hay productos</h3>
+        <p *ngIf="selectedCategory()">No se encontraron productos en la categoría "{{ selectedCategory() }}"</p>
+        <p *ngIf="!selectedCategory()">Comienza agregando tu primer producto</p>
+        <button class="btn-primary" routerLink="/products/new">
+          Agregar Producto
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</div>

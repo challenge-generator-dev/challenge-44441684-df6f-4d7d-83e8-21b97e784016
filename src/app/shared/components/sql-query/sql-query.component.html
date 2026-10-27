@@ -1,0 +1,156 @@
+<div class="sql-query-container">
+  <header class="sql-query-header">
+    <h2>Consola de Consultas SQL</h2>
+    <p class="subtitle">Ejecuta consultas optimizadas: JOIN, GROUP BY, ORDER BY</p>
+  </header>
+
+  <nav class="sql-query-tabs">
+    <button 
+      [class.active]="activeTab() === 'editor'" 
+      (click)="activeTab.set('editor')"
+      class="tab-btn"
+    >
+      Editor
+    </button>
+    <button 
+      [class.active]="activeTab() === 'presets'" 
+      (click)="activeTab.set('presets')"
+      class="tab-btn"
+    >
+      Consultas Predefinidas
+    </button>
+    <button 
+      [class.active]="activeTab() === 'history'" 
+      (click)="activeTab.set('history')"
+      class="tab-btn"
+    >
+      Historial
+    </button>
+  </nav>
+
+  <div class="sql-query-content">
+    <div *ngIf="activeTab() === 'editor'" class="editor-section">
+      <div class="table-selector">
+        <span class="label">Vista rápida:</span>
+        <button 
+          *ngFor="let table of ['products', 'clients', 'purchases']"
+          [class.active]="selectedTable() === table"
+          (click)="selectTable($any(table))"
+          class="table-btn"
+        >
+          {{ table | titlecase }}
+        </button>
+      </div>
+
+      <div class="query-editor">
+        <label for="sql-input">Consulta SQL</label>
+        <textarea 
+          id="sql-input"
+          [(ngModel)]="currentQuery"
+          placeholder="SELECT * FROM products WHERE..."
+          class="sql-textarea"
+          rows="8"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div class="editor-actions">
+        <button 
+          class="btn-execute" 
+          (click)="executeQuery()"
+          [disabled]="isExecuting()"
+        >
+          {{ isExecuting() ? 'Ejecutando...' : '▶ Ejecutar Consulta' }}
+        </button>
+        <button class="btn-clear" (click)="clearQuery()">
+          🗑️ Limpiar
+        </button>
+        <button class="btn-clear-results" (click)="clearResults()">
+          ✨ Limpiar Resultados
+        </button>
+      </div>
+
+      <div *ngIf="errorMessage()" class="error-banner">
+        <span class="error-icon">⚠️</span>
+        {{ errorMessage() }}
+      </div>
+    </div>
+
+    <div *ngIf="activeTab() === 'presets'" class="presets-section">
+      <div class="presets-grid">
+        <div 
+          *ngFor="let preset of queryPresets" 
+          class="preset-card"
+          (click)="selectPreset(preset)"
+        >
+          <div class="preset-header">
+            <span class="preset-icon">{{ getPresetIcon(preset.type) }}</span>
+            <span class="preset-type">{{ preset.type | uppercase }}</span>
+          </div>
+          <h4 class="preset-name">{{ preset.name }}</h4>
+          <p class="preset-description">{{ preset.description }}</p>
+          <code class="preset-query">{{ preset.query }}</code>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab() === 'history'" class="history-section">
+      <div *ngIf="queryHistory().length === 0" class="empty-history">
+        <p>No hay consultas en el historial</p>
+      </div>
+      <div *ngIf="queryHistory().length > 0" class="history-list">
+        <div 
+          *ngFor="let entry of queryHistory()" 
+          class="history-item"
+          (click)="loadFromHistory(entry)"
+        >
+          <span 
+            class="history-status" 
+            [class.success]="entry.success"
+            [class.error]="!entry.success"
+          >
+            {{ entry.success ? '✓' : '✗' }}
+          </span>
+          <code class="history-query">{{ entry.query }}</code>
+          <span class="history-time">
+            {{ entry.timestamp | date:'HH:mm:ss' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="queryResults()" class="results-section">
+      <div class="results-header">
+        <h3>Resultados</h3>
+        <div class="results-meta">
+          <span class="row-count">{{ getRowCountMessage() }}</span>
+          <span class="execution-time">{{ getExecutionTimeMessage() }}</span>
+        </div>
+      </div>
+
+      <div class="results-table-wrapper">
+        <table class="results-table" *ngIf="queryResults()!.rows.length > 0">
+          <thead>
+            <tr>
+              <th *ngFor="let column of queryResults()!.columns">
+                {{ column }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of queryResults()!.rows; let i = index">
+              <td *ngFor="let column of queryResults()!.columns">
+                <span [class.null-value]="row[column] === null">
+                  {{ formatCellValue(row[column]) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="queryResults()!.rows.length === 0" class="no-results">
+          <p>La consulta se ejecutó correctamente pero no devolvió resultados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

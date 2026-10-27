@@ -1,0 +1,118 @@
+<div class="client-list-container">
+  <div class="header-section">
+    <h1 class="page-title">Lista de Clientes</h1>
+    <div class="header-actions">
+      <button
+        class="btn btn-primary"
+        routerLink="/clients/new">
+        <span class="btn-icon">+</span>
+        Nuevo Cliente
+      </button>
+    </div>
+  </div>
+
+  <div class="search-section">
+    <div class="search-input-wrapper">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar clientes por nombre o correo..."
+        (input)="searchClients($any($event.target).value)"
+        aria-label="Buscar clientes">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="sort-buttons">
+      <button class="btn btn-secondary" (click)="sortByName()">
+        Ordenar por Nombre
+      </button>
+      <button class="btn btn-secondary" (click)="sortByEmail()">
+        Ordenar por Correo
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Cargando clientes...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-message" role="alert">
+      <span class="error-icon">⚠️</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    <div class="results-info">
+      <span class="client-count">Total de clientes: {{ clientCount() }}</span>
+    </div>
+
+    @if (hasClients()) {
+      <div class="table-wrapper">
+        <table class="client-table" role="table" aria-label="Lista de clientes">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Correo Electrónico</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Compras</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (client of clients(); track client.id) {
+              <tr class="client-row" [class.clickable]="true">
+                <td class="cell-id">{{ client.id }}</td>
+                <td class="cell-name">
+                  <a [routerLink]="['/clients', client.id]" class="client-link">
+                    {{ client.name }}
+                  </a>
+                </td>
+                <td class="cell-email">{{ client.email }}</td>
+                <td class="cell-phone">{{ client.phone || 'N/A' }}</td>
+                <td class="cell-purchases">
+                  <span class="purchase-badge">{{ getPurchaseCount(client) }}</span>
+                </td>
+                <td class="cell-actions">
+                  <div class="action-buttons">
+                    <button
+                      class="btn btn-icon"
+                      [routerLink]="['/clients', client.id, 'edit']"
+                      aria-label="Editar cliente"
+                      title="Editar">
+                      ✏️
+                    </button>
+                    <button
+                      class="btn btn-icon btn-danger"
+                      (click)="deleteClient(client.id, $event)"
+                      aria-label="Eliminar cliente"
+                      title="Eliminar">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h2>No hay clientes registrados</h2>
+        <p>Comienza agregando tu primer cliente al sistema.</p>
+        <button class="btn btn-primary" routerLink="/clients/new">
+          Agregar Cliente
+        </button>
+      </div>
+    }
+  }
+
+  @if (lastQueryExecuted()) {
+    <app-sql-query [query]="lastQueryExecuted()"></app-sql-query>
+  }
+</div>
